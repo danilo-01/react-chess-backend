@@ -1,0 +1,14 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend for chess 2.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Danilo Costilla",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
