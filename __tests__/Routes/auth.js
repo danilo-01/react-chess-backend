@@ -5,10 +5,28 @@ const testUsers = require("./testUsers");
 
 describe("/auth/register tests", () => {
   it("should return status 200 and contain a token", async () => {
-    const res = await request(app).post("/auth/register").send(user1);
+    const res = await request(app).post("/auth/register").send({
+      username: "testUser1",
+      password: "Password1!",
+      firstName: "test",
+      lastName: "test",
+      email: "testemail.1@test.com",
+    });
 
     expect(res.statusCode).toBe(200);
-    expect(res._token).toBeDefined();
+    expect(JSON.parse(res.text)._token).toBeDefined();
+  });
+
+  it("should return status 200 and contain a token without lastName", async () => {
+    const res = await request(app).post("/auth/register").send({
+      username: "testUser1",
+      password: "Password1!",
+      firstName: "test",
+      email: "testemail.1@test.com",
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.text)._token).toBeDefined();
   });
 
   it("should return 409 with message if user already exists ", async () => {
