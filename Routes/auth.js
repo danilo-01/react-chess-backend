@@ -15,7 +15,12 @@ Accepts
     "email" : "email@somedomain.com" * must be a valid email and unique
 }
 */
-router.post("/register", controllers.register);
+router.post(
+  "/register",
+  controllers.validateSchema("register"),
+  controllers.validateParams("register"),
+  controllers.register
+);
 
 /* 
 /auth/register

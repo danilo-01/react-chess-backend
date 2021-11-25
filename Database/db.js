@@ -1,5 +1,5 @@
 const { Client } = require("pg");
-const { DB_URI } = require("../config/config.js");
+const { DB_URI } = require("../config");
 
 // Connect to a test or production database
 if (process.env.NODE_ENV === "production") {

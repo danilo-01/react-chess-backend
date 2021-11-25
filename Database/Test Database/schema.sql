@@ -8,10 +8,11 @@ CREATE DATABASE react_chess_test;
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(20) UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    email TEXT NOT NULL,
+    hashed_password TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
     first_name TEXT NOT NULL,
-    last_name TEXT
+    last_name TEXT,
+    is_admin BOOLEAN NOT NULL
 );
 
 -- GAMES TABLE

@@ -2,9 +2,33 @@
 const request = require("supertest");
 const app = require("../../app");
 const testUsers = require("./testUsers");
+const db = require("../../Database/db");
+
+beforeEach(async () => {
+  await db.query("DELETE FROM users");
+  await db.query(`INSERT INTO users (username, hashed_password, email, first_name, last_name, is_admin)
+  VALUES ('testUser1', 'Password1!', 'testemail.1@test.com', 'test', 'test', ${false})`);
+});
+
+afterAll(async () => {
+  db.end();
+});
 
 describe("/auth/register tests", () => {
   it("should return status 200 and contain a token", async () => {
+    const res = await request(app).post("/auth/register").send({
+      username: "testUser2",
+      password: "Password1!",
+      firstName: "test",
+      lastName: "test",
+      email: "testemai2.1@test.com",
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.text)._token).toBeDefined();
+  });
+
+  it("should return 409 with message if user already exists ", async () => {
     const res = await request(app).post("/auth/register").send({
       username: "testUser1",
       password: "Password1!",
@@ -13,28 +37,9 @@ describe("/auth/register tests", () => {
       email: "testemail.1@test.com",
     });
 
-    expect(res.statusCode).toBe(200);
-    expect(JSON.parse(res.text)._token).toBeDefined();
-  });
-
-  it("should return status 200 and contain a token without lastName", async () => {
-    const res = await request(app).post("/auth/register").send({
-      username: "testUser1",
-      password: "Password1!",
-      firstName: "test",
-      email: "testemail.1@test.com",
-    });
-
-    expect(res.statusCode).toBe(200);
-    expect(JSON.parse(res.text)._token).toBeDefined();
-  });
-
-  it("should return 409 with message if user already exists ", async () => {
-    const res = await request(app).post("/auth/register").send(testUsers.user1);
-
     expect(res.statusCode).toBe(409);
-    expect(res._token).not.toBeDefined();
-    expect(res.message).toBe("/already taken/");
+    expect(JSON.parse(res.text)._token).not.toBeDefined();
+    expect(JSON.parse(res.text).message).toMatch("already exists");
   });
 
   describe("400 response tests", () => {
@@ -44,8 +49,8 @@ describe("/auth/register tests", () => {
         .send(testUsers.user3);
 
       expect(res.statusCode).toBe(400);
-      expect(res._token).not.toBeDefined();
-      expect(res.message).toBe("/invalid values/");
+      expect(JSON.parse(res.text)._token).not.toBeDefined();
+      expect(JSON.parse(res.text).errors).toBeDefined();
     });
 
     it("should return 400 with number as username", async () => {
@@ -54,59 +59,59 @@ describe("/auth/register tests", () => {
         password: "Password1!",
         firstName: "test",
         lastName: "test",
-        email: "testemail.1@test.com",
+        email: "testemai2.1@test.com",
       });
 
       expect(res.statusCode).toBe(400);
-      expect(res._token).not.toBeDefined();
-      expect(res.message).toBe("/username/");
+      expect(JSON.parse(res.text)._token).not.toBeDefined();
+      expect(JSON.parse(res.text).errors).toBeDefined();
     });
 
     it("should return 400 with number as a password", async () => {
       const res = await request(app).post("/auth/register").send({
-        username: "testUser1",
+        username: "testUser2",
         password: "1",
         firstName: "test",
         lastName: "test",
-        email: "testemail.1@test.com",
+        email: "testemai2.1@test.com",
       });
 
       expect(res.statusCode).toBe(400);
-      expect(res._token).not.toBeDefined();
-      expect(res.message).toBe("/password/");
+      expect(JSON.parse(res.text)._token).not.toBeDefined();
+      expect(JSON.parse(res.text).errors).toBeDefined();
     });
 
     it("should return 400 with number as a first name", async () => {
       const res = await request(app).post("/auth/register").send({
-        username: "testUser1",
+        username: "testUser2",
         password: "Password1!",
         firstName: "1",
         lastName: "test",
-        email: "testemail.1@test.com",
+        email: "testemai2.1@test.com",
       });
 
       expect(res.statusCode).toBe(400);
-      expect(res._token).not.toBeDefined();
-      expect(res.message).toBe("/firstName/");
+      expect(JSON.parse(res.text)._token).not.toBeDefined();
+      expect(JSON.parse(res.text).errors).toBeDefined();
     });
 
     it("should return 400 with number as a last name", async () => {
       const res = await request(app).post("/auth/register").send({
-        username: "testUser1",
+        username: "testUser2",
         password: "Password1!",
         firstName: "test",
         lastName: "1",
-        email: "testemail.1@test.com",
+        email: "testemai2.1@test.com",
       });
 
       expect(res.statusCode).toBe(400);
-      expect(res._token).not.toBeDefined();
-      expect(res.message).toBe("/lastName/");
+      expect(JSON.parse(res.text)._token).not.toBeDefined();
+      expect(JSON.parse(res.text).errors).toBeDefined();
     });
 
     it("should return 400 with number as a email", async () => {
       const res = await request(app).post("/auth/register").send({
-        username: "testUser1",
+        username: "testUser2",
         password: "Password1!",
         firstName: "test",
         lastName: "test",
@@ -114,8 +119,8 @@ describe("/auth/register tests", () => {
       });
 
       expect(res.statusCode).toBe(400);
-      expect(res._token).not.toBeDefined();
-      expect(res.message).toBe("/email/");
+      expect(JSON.parse(res.text)._token).not.toBeDefined();
+      expect(JSON.parse(res.text).errors).toBeDefined();
     });
 
     it("should return 400 with extra key in body", async () => {
@@ -129,8 +134,10 @@ describe("/auth/register tests", () => {
       });
 
       expect(res.statusCode).toBe(400);
-      expect(res._token).not.toBeDefined();
-      expect(res.message).toBe("/invalid/");
+      expect(JSON.parse(res.text)._token).not.toBeDefined();
+      expect(JSON.parse(res.text).message).toMatch(
+        "not allowed to have the additional property"
+      );
     });
 
     it("should return 400 with missing key in body", async () => {
@@ -142,41 +149,41 @@ describe("/auth/register tests", () => {
       });
 
       expect(res.statusCode).toBe(400);
-      expect(res._token).not.toBeDefined();
-      expect(res.message).toBe("/missing/");
+      expect(JSON.parse(res.text)._token).not.toBeDefined();
+      expect(JSON.parse(res.text).message).toMatch("requires property");
     });
   });
 });
 
-describe("/auth/retrieve tests", () => {
-  it("should return status 200 and contain a token", async () => {
-    const res = await request(app).post("/auth/register").send({
-      username: testUsers.user2.username,
-      password: testUsers.user2.password,
-    });
+// describe("/auth/retrieve tests", () => {
+//   it("should return status 200 and contain a token", async () => {
+//     const res = await request(app).post("/auth/register").send({
+//       username: testUsers.user2.username,
+//       password: testUsers.user2.password,
+//     });
 
-    expect(res.statusCode).toBe(200);
-    expect(res._token).toBeDefined();
-  });
+//     expect(res.statusCode).toBe(200);
+//     expect(res._token).toBeDefined();
+//   });
 
-  it("should return 404 if user does not exists", async () => {
-    const res = await request(app).post("/auth/register").send({
-      username: testUsers.user2.username,
-      password: testUsers.user2.password,
-    });
+//   it("should return 404 if user does not exists", async () => {
+//     const res = await request(app).post("/auth/register").send({
+//       username: testUsers.user2.username,
+//       password: testUsers.user2.password,
+//     });
 
-    expect(res.statusCode).toBe(404);
-    expect(res._token).not.toBeDefined();
-    expect(res.message).toBe("/does not exist/");
-  });
+//     expect(res.statusCode).toBe(404);
+//     expect(res._token).not.toBeDefined();
+//     expect(res.message).toBe("/does not exist/");
+//   });
 
-  it("should return 400 if missing username", async () => {
-    const res = await request(app).post("/auth/register").send({
-      password: testUsers.user2.password,
-    });
+//   it("should return 400 if missing username", async () => {
+//     const res = await request(app).post("/auth/register").send({
+//       password: testUsers.user2.password,
+//     });
 
-    expect(res.statusCode).toBe(404);
-    expect(res._token).not.toBeDefined();
-    expect(res.message).toBe("/missing/");
-  });
-});
+//     expect(res.statusCode).toBe(404);
+//     expect(res._token).not.toBeDefined();
+//     expect(res.message).toBe("/missing/");
+//   });
+// });

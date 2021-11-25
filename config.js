@@ -1,6 +1,6 @@
 /** Shared config for application; */
 
-require("dotenv");
+require("dotenv").config();
 
 const SECRET_KEY = process.env.SECRET_KEY || "development-secret-key";
 
@@ -8,13 +8,14 @@ const PORT = +process.env.PORT || 3000;
 
 const BCRYPT_WORK_FACTOR = 10;
 
+// Get dev database uri or prod uri
 const DB_URI =
-  process.env.NODE_ENV === "test"
+  process.env.NODE_ENV === "development"
     ? "postgresql:///react_chess_test"
     : "postgresql:///react_chess";
 
 function getDatabaseUri() {
-  return process.env.NODE_ENV === "test"
+  return process.env.NODE_ENV === "development"
     ? "react_chess_test"
     : process.env.DATABASE_URL || "react_chess_test";
 }

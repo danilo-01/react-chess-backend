@@ -1,17 +1,13 @@
 // Function to return a 404 not found or an error
-const notFound = (err, req, res, next) => {
+const notFoundOrError = (err, req, res, next) => {
   if (err) {
-    return res.status(err.status).send(
-      JSON.stringify({
-        message: err.message,
-      })
-    );
+    return res.status(err.status || 500).send({
+      message: err.message || "Server Error",
+    });
   }
-  return res.status(404).send(
-    JSON.stringify({
-      message: "Endpoint not matched.",
-    })
-  );
+  return res.status(404).send({
+    message: "Endpoint not matched.",
+  });
 };
 
-module.exports = notFound;
+module.exports = notFoundOrError;
