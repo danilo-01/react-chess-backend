@@ -23,7 +23,7 @@ router.post(
 );
 
 /* 
-/auth/register
+/auth/retrieve
 
 Accepts
 {
@@ -31,6 +31,11 @@ Accepts
     "password" : "Supers3cr3t!" * must match username indatabase's hashed password
 }
 */
-router.post("/register", controllers.retrieve);
+router.post(
+  "/retrieve",
+  controllers.validateSchema("retrieve"),
+  controllers.validateParams("retrieve"),
+  controllers.retrieve
+);
 
 module.exports = router;

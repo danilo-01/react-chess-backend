@@ -27,7 +27,7 @@ class Users {
     const query = `INSERT INTO users 
       (username, hashed_password, first_name, last_name, email, is_admin)
       VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING (id, username, is_admin)`;
+      RETURNING *`;
 
     const result = await db.query(query, [
       user.username,
@@ -39,6 +39,18 @@ class Users {
     ]);
 
     return result.rows[0];
+  }
+
+  // Validate user
+  static async validate(username, password) {
+    // Get user if any in database
+    const user = await this.getOne(username);
+    if (!user) return undefined;
+
+    // Compare passwords
+    const result = await bcrypt.compare(password, user.hashed_password);
+
+    return result ? user : undefined;
   }
 }
 
