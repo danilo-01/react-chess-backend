@@ -22,8 +22,11 @@ afterAll(async () => {
   db.end();
 });
 
-describe("/auth/register tests", () => {
-  it("should return status 200 and contain a token", async () => {
+// TODO
+// test unique character entries
+
+describe("/auth/register", () => {
+  test("valid request", async () => {
     const res = await request(app).post("/auth/register").send({
       username: "testUser2",
       password: "Password1!",
@@ -36,7 +39,7 @@ describe("/auth/register tests", () => {
     expect(resBody._token).toBeDefined();
   });
 
-  it("should return 409 with message if user already exists ", async () => {
+  test("creating a user that already exists", async () => {
     const res = await request(app).post("/auth/register").send({
       username: "testUser1",
       password: "Password1!",
@@ -50,8 +53,8 @@ describe("/auth/register tests", () => {
     expect(resBody.message).toMatch("already exists");
   });
 
-  describe("400 response tests", () => {
-    it("should return 400 with number as username", async () => {
+  describe("400 responses", () => {
+    test("entering a number as 'username'", async () => {
       testUser.username = "1";
       const res = await request(app).post("/auth/register").send(testUser);
       const resBody = JSON.parse(res.text);
@@ -60,7 +63,7 @@ describe("/auth/register tests", () => {
       expect(resBody.message).toBeDefined();
     });
 
-    it("should return 400 with number as a password", async () => {
+    test("entering a number as 'password'", async () => {
       testUser.password = "1";
       const res = await request(app).post("/auth/register").send(testUser);
       const resBody = JSON.parse(res.text);
@@ -69,7 +72,7 @@ describe("/auth/register tests", () => {
       expect(resBody.message).toBeDefined();
     });
 
-    it("should return 400 with number as a first name", async () => {
+    test("entering a number as 'firstName'", async () => {
       testUser.firstName = "1";
       const res = await request(app).post("/auth/register").send(testUser);
       const resBody = JSON.parse(res.text);
@@ -78,7 +81,7 @@ describe("/auth/register tests", () => {
       expect(resBody.message).toBeDefined();
     });
 
-    it("should return 400 with number as a last name", async () => {
+    test("entering a number as 'lastName'", async () => {
       testUser.lastName = "1";
       const res = await request(app).post("/auth/register").send(testUser);
       const resBody = JSON.parse(res.text);
@@ -87,7 +90,7 @@ describe("/auth/register tests", () => {
       expect(resBody.message).toBeDefined();
     });
 
-    it("should return 400 with number as a email", async () => {
+    test("entering a number as 'email'", async () => {
       testUser.email = "1";
       const res = await request(app).post("/auth/register").send(testUser);
       const resBody = JSON.parse(res.text);
@@ -96,7 +99,7 @@ describe("/auth/register tests", () => {
       expect(resBody.message).toBeDefined();
     });
 
-    it("should return 400 with extra key in body", async () => {
+    test("entering an extra key in body", async () => {
       testUser.extraKey = "key";
       const res = await request(app).post("/auth/register").send(testUser);
       const resBody = JSON.parse(res.text);
@@ -107,7 +110,7 @@ describe("/auth/register tests", () => {
       );
     });
 
-    it("should return 400 with missing key in body", async () => {
+    test("missing a key in body", async () => {
       delete testUser.username;
       const res = await request(app).post("/auth/register").send(testUser);
       const resBody = JSON.parse(res.text);
@@ -118,8 +121,8 @@ describe("/auth/register tests", () => {
   });
 });
 
-describe("/auth/retrieve tests", () => {
-  it("should return status 200 and contain a token", async () => {
+describe("/auth/retrieve", () => {
+  test("valid request", async () => {
     const res = await request(app).post("/auth/retrieve").send({
       username: testUser.username,
       password: testUser.password,
@@ -130,7 +133,7 @@ describe("/auth/retrieve tests", () => {
     expect(resBody._token).toBeDefined();
   });
 
-  it("should return 404 if user does not exists", async () => {
+  test("entering a username that doesnt exist", async () => {
     const res = await request(app).post("/auth/retrieve").send({
       username: "unknownUser",
       password: "password",
@@ -142,7 +145,7 @@ describe("/auth/retrieve tests", () => {
     expect(resBody.message).toBe("User not found");
   });
 
-  it("should return 400 if missing username", async () => {
+  test("missing 'username' in request", async () => {
     const res = await request(app).post("/auth/retrieve").send({
       password: testUser.password,
     });
@@ -153,7 +156,7 @@ describe("/auth/retrieve tests", () => {
     expect(resBody.message).toMatch("requires property");
   });
 
-  it("should return 400 if missing password", async () => {
+  test("missing 'password' in request", async () => {
     const res = await request(app).post("/auth/retrieve").send({
       username: testUser.username,
     });
@@ -164,7 +167,7 @@ describe("/auth/retrieve tests", () => {
     expect(resBody.message).toMatch("requires property");
   });
 
-  it("should return 401 if incorrect password", async () => {
+  test("entering an incorrect password", async () => {
     const res = await request(app).post("/auth/retrieve").send({
       username: testUser.username,
       password: "bad password",
