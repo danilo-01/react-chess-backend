@@ -127,35 +127,49 @@ describe("/auth/register tests", () => {
   });
 });
 
-// describe("/auth/retrieve tests", () => {
-//   it("should return status 200 and contain a token", async () => {
-//     const res = await request(app).post("/auth/retrieve").send({
-//       username: "testUser2",
-//       password: "Password1!",
-//     });
+describe("/auth/retrieve tests", () => {
+  it("should return status 200 and contain a token", async () => {
+    const res = await request(app).post("/auth/retrieve").send({
+      username: testUser.username,
+      password: testUser.password,
+    });
 
-//     expect(res.statusCode).toBe(200);
-//     expect(JSON.parse(res)._token).toBeDefined();
-//   });
+    resBody = JSON.parse(res.text);
+    expect(res.statusCode).toBe(200);
+    expect(resBody._token).toBeDefined();
+  });
 
-//   it("should return 404 if user does not exists", async () => {
-//     const res = await request(app).post("/auth/retrieve").send({
-//       username: "testUser12",
-//       password: "Password1!",
-//     });
+  it("should return 404 if user does not exists", async () => {
+    const res = await request(app).post("/auth/retrieve").send({
+      username: "unknownUser",
+      password: "password",
+    });
 
-//     expect(res.statusCode).toBe(404);
-//     expect(JSON.parse(res)._token).not.toBeDefined();
-//     expect(JSON.parse(res).message).toBe("/does not exist/");
-//   });
+    resBody = JSON.parse(res.text);
+    expect(res.statusCode).toBe(404);
+    expect(resBody._token).not.toBeDefined();
+    expect(resBody.message).toBe("/does not exist/");
+  });
 
-//   it("should return 400 if missing username", async () => {
-//     const res = await request(app).post("/auth/retrieve").send({
-//       password: testUsers.user2.password,
-//     });
+  it("should return 400 if missing username", async () => {
+    const res = await request(app).post("/auth/retrieve").send({
+      password: testUser.password,
+    });
 
-//     expect(res.statusCode).toBe(404);
-//     expect(res._token).not.toBeDefined();
-//     expect(res.message).toBe("/missing/");
-//   });
-// });
+    resBody = JSON.parse(res.text);
+    expect(res.statusCode).toBe(404);
+    expect(resBody._token).not.toBeDefined();
+    expect(resBody.message).toBe("/missing/");
+  });
+
+  it("should return 400 if missing password", async () => {
+    const res = await request(app).post("/auth/retrieve").send({
+      username: testUser.username,
+    });
+
+    resBody = JSON.parse(res.text);
+    expect(res.statusCode).toBe(404);
+    expect(resBody._token).not.toBeDefined();
+    expect(resBody.message).toBe("/missing/");
+  });
+});

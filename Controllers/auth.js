@@ -32,7 +32,10 @@ exports.register = async (req, res, next) => {
     });
   } catch (error) {
     if (sqlErrors[error.constraint]) return next(sqlErrors[error.constraint]);
-    return next(new ExpressError(500, "Server error."));
+    // If error isnt an express error return a 500 server error
+    return error instanceof ExpressError
+      ? next(error)
+      : next(new ExpressError(500, "Server error"));
   }
 };
 
@@ -42,14 +45,11 @@ exports.retrieve = async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        errors: errors.array(),
-      });
+      return next(new ExpressError(400, errors[0].message));
     }
 
     // Validate user
     const user = await Users.validate(req.body.username, req.body.password);
-    if (!user) return next(new ExpressError(401, "Invalid username/password"));
 
     // Return token
     return res.status(200).send({
@@ -62,9 +62,11 @@ exports.retrieve = async (req, res, next) => {
         SECRET_KEY
       ),
     });
-    return res.status(200).send("ok");
   } catch (error) {
-    return next(error);
+    // If error isnt an express error return a 500 server error
+    return error instanceof ExpressError
+      ? next(error)
+      : next(new ExpressError(500, "Server error"));
   }
 };
 

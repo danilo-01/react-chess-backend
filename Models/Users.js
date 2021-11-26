@@ -3,6 +3,7 @@ const { hash } = require("bcrypt");
 const db = require("../Database/db");
 const bcrypt = require("bcrypt");
 const { BCRYPT_WORK_FACTOR } = require("../config");
+const ExpressError = require("../Helpers/ExpressError");
 
 class Users {
   // Get one user from database with an id or username
@@ -45,12 +46,18 @@ class Users {
   static async validate(username, password) {
     // Get user if any in database
     const user = await this.getOne(username);
-    if (!user) return undefined;
+    if (!user) {
+      throw new ExpressError(404, "User not found");
+    }
 
     // Compare passwords
     const result = await bcrypt.compare(password, user.hashed_password);
 
-    return result ? user : undefined;
+    if (result) {
+      return user;
+    } else {
+      throw new ExpressError(401, "Unauthorized");
+    }
   }
 }
 
