@@ -163,4 +163,16 @@ describe("/auth/retrieve tests", () => {
     expect(resBody._token).not.toBeDefined();
     expect(resBody.message).toMatch("requires property");
   });
+
+  it("should return 401 if incorrect password", async () => {
+    const res = await request(app).post("/auth/retrieve").send({
+      username: testUser.username,
+      password: "bad password",
+    });
+
+    const resBody = JSON.parse(res.text);
+    expect(res.statusCode).toBe(401);
+    expect(resBody._token).not.toBeDefined();
+    expect(resBody.message).toMatch("Unauthorized");
+  });
 });
