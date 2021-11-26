@@ -17,7 +17,7 @@ const DB_URI =
 function getDatabaseUri() {
   return process.env.NODE_ENV === "test"
     ? "react_chess_test"
-    : process.env.DATABASE_URL || "react_chess_test";
+    : process.env.DATABASE_URL || "react_chess";
 }
 
 module.exports = {
