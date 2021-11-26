@@ -1,15 +1,13 @@
 // Controllers for /auth routes
 const jsonschema = require("jsonschema");
+const { body, validationResult } = require("express-validator");
+const jwt = require("jsonwebtoken");
+const { SECRET_KEY, getDatabaseUri } = require("../config");
 const registerSchema = require("../Json Schemas/Auth/register.json");
 const retrieveSchema = require("../Json Schemas/Auth/retrieve.json");
-const s = require("../Json Schemas/Auth/register.json");
 const Users = require("../Models/Users");
 const ExpressError = require("../Helpers/ExpressError");
-const jwt = require("jsonwebtoken");
-const { body, validationResult } = require("express-validator");
 const regExs = require("../Helpers/regExs");
-const { SECRET_KEY, getDatabaseUri } = require("../config");
-const sqlErrors = require("../Helpers/sqlErrors");
 const { REGISTER, RETRIEVE } = require("./methods");
 
 exports.register = async (req, res, next) => {
@@ -18,9 +16,7 @@ exports.register = async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        errors: errors.array(),
-      });
+      return next(new ExpressError(400, errors.errors[0].msg));
     }
 
     // Create user
@@ -31,7 +27,6 @@ exports.register = async (req, res, next) => {
       _token: jwt.sign(user, SECRET_KEY),
     });
   } catch (error) {
-    if (sqlErrors[error.constraint]) return next(sqlErrors[error.constraint]);
     // If error isnt an express error return a 500 server error
     return error instanceof ExpressError
       ? next(error)
@@ -45,7 +40,7 @@ exports.retrieve = async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      return next(new ExpressError(400, errors[0].message));
+      return next(new ExpressError(400, errors.errors[0].msg));
     }
 
     // Validate user
