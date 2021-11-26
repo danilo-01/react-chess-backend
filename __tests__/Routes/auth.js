@@ -1,13 +1,20 @@
 // Tests for /auth routes
 const request = require("supertest");
 const app = require("../../app");
-const testUsers = require("./testUsers");
 const db = require("../../Database/db");
+let testUser;
 
 beforeEach(async () => {
   await db.query("DELETE FROM users");
-  await db.query(`INSERT INTO users (username, hashed_password, email, first_name, last_name, is_admin)
-  VALUES ('testUser1', 'Password1!', 'testemail.1@test.com', 'test', 'test', ${false})`);
+  testUser = {
+    username: "testUser1",
+    password: "Password1!",
+    firstName: "test",
+    lastName: "test",
+    email: "testemail.1@test.com",
+  };
+
+  await request(app).post("/auth/register").send(testUser);
 });
 
 afterAll(async () => {
@@ -21,7 +28,7 @@ describe("/auth/register tests", () => {
       password: "Password1!",
       firstName: "test",
       lastName: "test",
-      email: "testemai2.1@test.com",
+      email: "testemail.2@test.com",
     });
 
     expect(res.statusCode).toBe(200);
@@ -43,24 +50,19 @@ describe("/auth/register tests", () => {
   });
 
   describe("400 response tests", () => {
-    it("should return 400 with array that contains what was invalid", async () => {
-      const res = await request(app)
-        .post("/auth/register")
-        .send(testUsers.user3);
+    // it("should return 400 with array that contains what was invalid", async () => {
+    //   delete testUser.username;
+    //   delete testUser.username;
+    //   const res = await request(app).post("/auth/register").send(testUser);
 
-      expect(res.statusCode).toBe(400);
-      expect(JSON.parse(res.text)._token).not.toBeDefined();
-      expect(JSON.parse(res.text).errors).toBeDefined();
-    });
+    //   expect(res.statusCode).toBe(400);
+    //   expect(JSON.parse(res.text)._token).not.toBeDefined();
+    //   expect(JSON.parse(res.text).errors).toBeDefined();
+    // });
 
     it("should return 400 with number as username", async () => {
-      const res = await request(app).post("/auth/register").send({
-        username: "1",
-        password: "Password1!",
-        firstName: "test",
-        lastName: "test",
-        email: "testemai2.1@test.com",
-      });
+      testUser.username = "1";
+      const res = await request(app).post("/auth/register").send(testUser);
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)._token).not.toBeDefined();
@@ -68,13 +70,8 @@ describe("/auth/register tests", () => {
     });
 
     it("should return 400 with number as a password", async () => {
-      const res = await request(app).post("/auth/register").send({
-        username: "testUser2",
-        password: "1",
-        firstName: "test",
-        lastName: "test",
-        email: "testemai2.1@test.com",
-      });
+      testUser.password = "1";
+      const res = await request(app).post("/auth/register").send(testUser);
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)._token).not.toBeDefined();
@@ -82,13 +79,8 @@ describe("/auth/register tests", () => {
     });
 
     it("should return 400 with number as a first name", async () => {
-      const res = await request(app).post("/auth/register").send({
-        username: "testUser2",
-        password: "Password1!",
-        firstName: "1",
-        lastName: "test",
-        email: "testemai2.1@test.com",
-      });
+      testUser.firstName = "1";
+      const res = await request(app).post("/auth/register").send(testUser);
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)._token).not.toBeDefined();
@@ -96,13 +88,8 @@ describe("/auth/register tests", () => {
     });
 
     it("should return 400 with number as a last name", async () => {
-      const res = await request(app).post("/auth/register").send({
-        username: "testUser2",
-        password: "Password1!",
-        firstName: "test",
-        lastName: "1",
-        email: "testemai2.1@test.com",
-      });
+      testUser.lastName = "1";
+      const res = await request(app).post("/auth/register").send(testUser);
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)._token).not.toBeDefined();
@@ -110,13 +97,8 @@ describe("/auth/register tests", () => {
     });
 
     it("should return 400 with number as a email", async () => {
-      const res = await request(app).post("/auth/register").send({
-        username: "testUser2",
-        password: "Password1!",
-        firstName: "test",
-        lastName: "test",
-        email: "1",
-      });
+      testUser.email = "1";
+      const res = await request(app).post("/auth/register").send(testUser);
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)._token).not.toBeDefined();
@@ -124,14 +106,8 @@ describe("/auth/register tests", () => {
     });
 
     it("should return 400 with extra key in body", async () => {
-      const res = await request(app).post("/auth/register").send({
-        username: "testUser1",
-        password: "Password1!",
-        firstName: "test",
-        lastName: "test",
-        email: "testemail.1@test.com",
-        favoriteDrink: "Hibiscus Tea",
-      });
+      testUser.extraKey = "key";
+      const res = await request(app).post("/auth/register").send(testUser);
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)._token).not.toBeDefined();
@@ -141,12 +117,8 @@ describe("/auth/register tests", () => {
     });
 
     it("should return 400 with missing key in body", async () => {
-      const res = await request(app).post("/auth/register").send({
-        username: "testUser1",
-        password: "Password1!",
-        firstName: "test",
-        lastName: "test",
-      });
+      delete testUser.username;
+      const res = await request(app).post("/auth/register").send(testUser);
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)._token).not.toBeDefined();
@@ -157,28 +129,28 @@ describe("/auth/register tests", () => {
 
 // describe("/auth/retrieve tests", () => {
 //   it("should return status 200 and contain a token", async () => {
-//     const res = await request(app).post("/auth/register").send({
-//       username: testUsers.user2.username,
-//       password: testUsers.user2.password,
+//     const res = await request(app).post("/auth/retrieve").send({
+//       username: "testUser2",
+//       password: "Password1!",
 //     });
 
 //     expect(res.statusCode).toBe(200);
-//     expect(res._token).toBeDefined();
+//     expect(JSON.parse(res)._token).toBeDefined();
 //   });
 
 //   it("should return 404 if user does not exists", async () => {
-//     const res = await request(app).post("/auth/register").send({
-//       username: testUsers.user2.username,
-//       password: testUsers.user2.password,
+//     const res = await request(app).post("/auth/retrieve").send({
+//       username: "testUser12",
+//       password: "Password1!",
 //     });
 
 //     expect(res.statusCode).toBe(404);
-//     expect(res._token).not.toBeDefined();
-//     expect(res.message).toBe("/does not exist/");
+//     expect(JSON.parse(res)._token).not.toBeDefined();
+//     expect(JSON.parse(res).message).toBe("/does not exist/");
 //   });
 
 //   it("should return 400 if missing username", async () => {
-//     const res = await request(app).post("/auth/register").send({
+//     const res = await request(app).post("/auth/retrieve").send({
 //       password: testUsers.user2.password,
 //     });
 
